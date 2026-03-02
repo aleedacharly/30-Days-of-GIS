@@ -2,7 +2,6 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.patheffects as pe
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import contextily as ctx
 import pandas as pd
 import numpy as np
@@ -130,9 +129,9 @@ for idx, row in places_wgs.iterrows():
     )
 
 # ── 6. India inset map ────────────────────────────────────────────────────────
+# DELETE this:
 ax_inset = inset_axes(ax, width="22%", height="22%", loc='upper right',
                       bbox_to_anchor=ax.bbox, bbox_transform=ax.transAxes)
-
 try:
     # Download India boundary from Natural Earth via geopandas datasets
     import geodatasets

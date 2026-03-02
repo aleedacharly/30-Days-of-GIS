@@ -67,4 +67,3 @@ python scripts/03_map.py
 - `outputs/landuse_map.png` \u2014 Choropleth map (300 dpi)
 - `outputs/landuse_summary.csv` \u2014 Area statistics per ward
 - `data/processed/landuse_classified.geojson` \u2014 Classified vector data
-

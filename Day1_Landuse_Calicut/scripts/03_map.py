@@ -5,7 +5,8 @@ import matplotlib.patheffects as pe
 import contextily as ctx
 import pandas as pd
 import numpy as np
-from shapely.geometry import Point, box
+import geodatasets
+from shapely.geometry import Point, box, Polygon
 from shapely.ops import unary_union
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
@@ -16,8 +17,23 @@ gdf_wgs = gdf.to_crs(epsg=4326)
 
 city = gpd.read_file('data/raw/kozhikode_boundary.geojson')
 city_wgs = city.to_crs(epsg=4326)
-gdf_wgs = gpd.clip(gdf_wgs, city_wgs)
 
+# ── Clip city boundary to land only (removes sea) ────────────────────────────
+print("Clipping city boundary to coastline...")
+land = gpd.read_file(geodatasets.get_path('naturalearth.land'))
+land_wgs = land.to_crs(epsg=4326)
+local_box = box(75.5, 11.0, 76.1, 11.6)
+land_local = land_wgs.clip(local_box)
+land_union = unary_union(land_local.geometry)
+
+# Clip the city polygon to land — sea pixels become empty
+city_clipped = city_wgs.copy()
+city_clipped['geometry'] = city_wgs.geometry.intersection(land_union)
+city_clipped = city_clipped[~city_clipped.geometry.is_empty]
+print(f"City clipped to land. Area: {city_clipped.to_crs(epsg=32643).geometry.area.sum()/1e6:.1f} km²")
+
+# Re-clip features to the land-only boundary
+gdf_wgs = gpd.clip(gdf_wgs, city_clipped)
 gdf_plot = gdf_wgs[gdf_wgs['landuse_class'] != 'Other'].copy()
 print("Features being plotted:")
 print(gdf_plot['landuse_class'].value_counts())
@@ -35,12 +51,15 @@ color_map = {
 # ── Main figure ───────────────────────────────────────────────────────────────
 fig, ax = plt.subplots(1, 1, figsize=(13, 15))
 
-minx, miny, maxx, maxy = city_wgs.total_bounds
+minx, miny, maxx, maxy = city_clipped.total_bounds
 pad = 0.02
 ax.set_xlim(minx - pad, maxx + pad)
 ax.set_ylim(miny - pad, maxy + pad)
 
-# ── 1. Basemap ────────────────────────────────────────────────────────────────
+# ── 1. Sea colour background ──────────────────────────────────────────────────
+ax.set_facecolor('#C8D8E8')
+
+# ── 2. Basemap ────────────────────────────────────────────────────────────────
 ctx.add_basemap(
     ax,
     crs=gdf_wgs.crs.to_string(),
@@ -49,7 +68,7 @@ ctx.add_basemap(
     zorder=1
 )
 
-# ── 2. White mask outside city boundary ──────────────────────────────────────
+# ── 3. White mask outside city boundary ──────────────────────────────────────
 def polygon_to_patch(geom, **kwargs):
     if geom.geom_type == 'MultiPolygon':
         paths = []
@@ -68,16 +87,19 @@ def polygon_to_patch(geom, **kwargs):
         return PathPatch(Path(ext, codes), **kwargs)
 
 big_box = box(minx - pad, miny - pad, maxx + pad, maxy + pad)
-city_union = unary_union(city_wgs.geometry)
+city_union = unary_union(city_clipped.geometry)
 mask_geom = big_box.difference(city_union)
+
+# Land outside city = light grey
 ax.add_patch(polygon_to_patch(
-    mask_geom, facecolor='white', edgecolor='none', zorder=2, linewidth=0
+    mask_geom, facecolor='#F5F3EF', edgecolor='none', zorder=2, linewidth=0
 ))
 
-# ── 3. City boundary ──────────────────────────────────────────────────────────
-city_wgs.boundary.plot(ax=ax, color='#2C3E50', linewidth=1.5, linestyle='--', zorder=3)
+# ── 4. City boundary ──────────────────────────────────────────────────────────
+city_clipped.boundary.plot(ax=ax, color='#2C3E50', linewidth=1.5,
+                            linestyle='--', zorder=3)
 
-# ── 4. Land use features ──────────────────────────────────────────────────────
+# ── 5. Land use features ──────────────────────────────────────────────────────
 layer_order = ['Water', 'Green/Open', 'Transport', 'Industrial', 'Commercial', 'Residential']
 for i, cat in enumerate(layer_order):
     subset = gdf_plot[gdf_plot['landuse_class'] == cat]
@@ -86,7 +108,7 @@ for i, cat in enumerate(layer_order):
     subset.plot(ax=ax, color=color_map[cat], alpha=0.85,
                 linewidth=0.2, edgecolor='white', zorder=4+i)
 
-# ── 5. Place labels ───────────────────────────────────────────────────────────
+# ── 6. Place labels ───────────────────────────────────────────────────────────
 known_places = pd.DataFrame({
     'name': [
         'Palayam', 'Mananchira', 'Calicut Beach', 'Nadakkavu',
@@ -128,46 +150,53 @@ for idx, row in places_wgs.iterrows():
         zorder=12
     )
 
-# ── 6. India inset map ────────────────────────────────────────────────────────
-# DELETE this:
-ax_inset = inset_axes(ax, width="22%", height="22%", loc='upper right',
-                      bbox_to_anchor=ax.bbox, bbox_transform=ax.transAxes)
-try:
-    # Download India boundary from Natural Earth via geopandas datasets
-    import geodatasets
-    world = gpd.read_file(geodatasets.get_path('naturalearth.land'))
-    india = world[world.geometry.intersects(
-        box(68, 6, 98, 38)
-    )].copy()
-    india.plot(ax=ax_inset, color='#F0F0F0', edgecolor='#AAAAAA', linewidth=0.5)
-except Exception:
-    # Fallback — download directly
-    try:
-        url = "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
-        world = gpd.read_file(url)
-        india = world[world['ADMIN'] == 'India']
-        india.plot(ax=ax_inset, color='#F0F0F0', edgecolor='#AAAAAA', linewidth=0.5)
-    except Exception:
-        # Final fallback — just draw a box
-        ax_inset.set_facecolor('#E8F4F8')
+# ── 7. India inset — hand-drawn polygon (no download needed) ─────────────────
+ax_inset = fig.add_axes([0.67, 0.72, 0.22, 0.20])
 
-# Plot Kozhikode marker on inset
-ax_inset.plot(75.78, 11.25, 'o', color='#C0392B', markersize=6, zorder=5)
-ax_inset.plot(75.78, 11.25, 'o', color='white', markersize=3, zorder=6)
+# India outline as a hand-drawn approximate polygon
+india_coords = [
+    (68.1, 23.6), (69.0, 22.0), (70.0, 20.5), (70.5, 21.0),
+    (72.0, 20.0), (72.6, 21.6), (72.8, 22.0), (73.0, 23.0),
+    (74.0, 23.0), (75.0, 23.5), (76.0, 23.5), (77.0, 23.0),
+    (78.0, 24.0), (79.0, 24.5), (80.0, 24.0), (81.0, 24.5),
+    (82.0, 24.0), (83.0, 24.5), (84.0, 24.0), (85.0, 24.5),
+    (86.0, 24.0), (87.0, 24.5), (88.0, 24.0), (88.5, 22.0),
+    (89.0, 22.5), (90.0, 22.0), (91.0, 23.5), (92.0, 24.0),
+    (92.5, 22.0), (93.0, 22.5), (94.0, 22.0), (95.0, 21.0),
+    (97.0, 20.0), (97.5, 18.0), (96.0, 16.0), (95.0, 14.0),
+    (94.0, 13.0), (93.0, 13.5), (92.5, 11.0), (92.0, 10.0),
+    (91.0, 9.0),  (90.0, 8.5),  (89.0, 8.0),  (88.0, 7.5),
+    (80.0, 6.0),  (78.0, 7.5),  (77.5, 8.0),  (77.0, 8.5),
+    (76.5, 8.5),  (76.0, 9.0),  (77.0, 10.0), (76.5, 11.0),
+    (75.5, 12.0), (74.5, 14.0), (73.5, 15.0), (73.0, 16.5),
+    (72.5, 17.0), (72.0, 18.0), (71.0, 19.5), (70.0, 20.0),
+    (69.0, 21.0), (68.5, 22.0), (68.1, 23.6),
+]
 
-# Zoom inset to India extent
-ax_inset.set_xlim(68, 98)
-ax_inset.set_ylim(6, 38)
+india_poly = Polygon(india_coords)
+india_gdf = gpd.GeoDataFrame(geometry=[india_poly], crs='EPSG:4326')
+
+ax_inset.set_facecolor('#C8D8E8')  # sea blue
+india_gdf.plot(ax=ax_inset, color='#D4C5A9', edgecolor='#888888',
+               linewidth=0.8, zorder=2)
+
+# Kozhikode marker
+ax_inset.plot(75.78, 11.25, 'o', color='#C0392B', markersize=7, zorder=5)
+ax_inset.plot(75.78, 11.25, 'o', color='white', markersize=3.5, zorder=6)
+ax_inset.annotate('Kozhikode', xy=(75.78, 11.25),
+                  xytext=(6, 6), textcoords='offset points',
+                  fontsize=6, color='#C0392B', fontweight='bold',
+                  zorder=7)
+
+ax_inset.set_xlim(67, 98)
+ax_inset.set_ylim(5, 38)
 ax_inset.set_aspect('equal')
 ax_inset.set_xticks([])
 ax_inset.set_yticks([])
-ax_inset.set_facecolor('#D6EAF8')  # light blue sea colour
 for spine in ax_inset.spines.values():
-    spine.set_edgecolor('#AAAAAA')
-    spine.set_linewidth(0.8)
-
-# Label
-ax_inset.text(0.5, -0.06, 'Location in India',
+    spine.set_edgecolor('#888888')
+    spine.set_linewidth(1)
+ax_inset.text(0.5, -0.07, 'Location in India',
               transform=ax_inset.transAxes,
               ha='center', fontsize=7, color='#555555', style='italic')
 

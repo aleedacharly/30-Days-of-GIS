@@ -2,7 +2,6 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import contextily as ctx
-import osmnx as ox
 import pandas as pd
 import matplotlib.patheffects as pe
 from shapely.geometry import Point, box
@@ -15,13 +14,13 @@ import numpy as np
 gdf = gpd.read_file('data/processed/landuse_classified.geojson')
 gdf_wgs = gdf.to_crs(epsg=4326)
 
-# ── Clip to actual Municipal Corporation boundary ─────────────────────────────
+# ── City boundary ─────────────────────────────────────────────────────────────
 city = gpd.read_file('data/raw/kozhikode_boundary.geojson')
-gdf_wgs = gpd.clip(gdf_wgs, city)
+city_wgs = city.to_crs(epsg=4326)
+gdf_wgs = gpd.clip(gdf_wgs, city_wgs)
 
-# ── Drop "Other" — adds noise, not information ────────────────────────────────
+# ── Drop "Other" ──────────────────────────────────────────────────────────────
 gdf_plot = gdf_wgs[gdf_wgs['landuse_class'] != 'Other'].copy()
-
 print("Features being plotted (excluding Other):")
 print(gdf_plot['landuse_class'].value_counts())
 
@@ -35,36 +34,33 @@ color_map = {
     'Water':       '#85C1E9',
 }
 
-# ── Plot ──────────────────────────────────────────────────────────────────────
+# ── Figure ────────────────────────────────────────────────────────────────────
 fig, ax = plt.subplots(1, 1, figsize=(13, 15))
 
-layer_order = ['Water', 'Green/Open', 'Transport', 'Industrial', 'Commercial', 'Residential']
+# ── Set extent first so basemap tiles load correctly ─────────────────────────
+minx, miny, maxx, maxy = city_wgs.total_bounds
+pad = 0.02
+ax.set_xlim(minx - pad, maxx + pad)
+ax.set_ylim(miny - pad, maxy + pad)
 
-for cat in layer_order:
-    subset = gdf_plot[gdf_plot['landuse_class'] == cat]
-    if len(subset) == 0:
-        continue
-    subset.plot(
-        ax=ax,
-        color=color_map[cat],
-        alpha=0.85,
-        linewidth=0.2,
-        edgecolor='white'
-    )
+# ── LAYER ORDER (bottom to top):
+#    1. Basemap
+#    2. White mask (outside city)
+#    3. City boundary line
+#    4. Land use features
+#    5. Place labels
 
-# ── Basemap (add before mask so mask sits on top) ─────────────────────────────
-city_wgs = city.to_crs(epsg=4326)
-
+# ── 1. Basemap ────────────────────────────────────────────────────────────────
 ctx.add_basemap(
     ax,
     crs=gdf_wgs.crs.to_string(),
     source=ctx.providers.CartoDB.PositronNoLabels,
-    alpha=0.6
+    alpha=0.6,
+    zorder=1
 )
 
-# ── Mask everything outside city boundary ─────────────────────────────────────
+# ── 2. White mask outside city boundary ──────────────────────────────────────
 def polygon_to_patch(geom, **kwargs):
-    """Convert a shapely polygon/multipolygon to a matplotlib PathPatch."""
     if geom.geom_type == 'MultiPolygon':
         paths = []
         for poly in geom.geoms:
@@ -74,11 +70,11 @@ def polygon_to_patch(geom, **kwargs):
                      [Path.CLOSEPOLY])
             paths.append(Path(exterior, codes))
             for interior in poly.interiors:
-                interior_coords = np.array(interior.coords)
+                ic = np.array(interior.coords)
                 codes = ([Path.MOVETO] +
-                         [Path.LINETO] * (len(interior_coords) - 2) +
+                         [Path.LINETO] * (len(ic) - 2) +
                          [Path.CLOSEPOLY])
-                paths.append(Path(interior_coords, codes))
+                paths.append(Path(ic, codes))
         combined = Path.make_compound_path(*paths)
         return PathPatch(combined, **kwargs)
     else:
@@ -86,38 +82,46 @@ def polygon_to_patch(geom, **kwargs):
         codes = ([Path.MOVETO] +
                  [Path.LINETO] * (len(exterior) - 2) +
                  [Path.CLOSEPOLY])
-        path = Path(exterior, codes)
-        return PathPatch(path, **kwargs)
+        return PathPatch(Path(exterior, codes), **kwargs)
 
-minx, miny, maxx, maxy = city_wgs.total_bounds
-pad = 0.02
 big_box = box(minx - pad, miny - pad, maxx + pad, maxy + pad)
 city_union = unary_union(city_wgs.geometry)
 mask_geom = big_box.difference(city_union)
 
-mask_patch = polygon_to_patch(
+ax.add_patch(polygon_to_patch(
     mask_geom,
     facecolor='white',
     edgecolor='none',
-    zorder=4,
+    zorder=2,
     linewidth=0
-)
-ax.add_patch(mask_patch)
+))
 
-# ── City boundary drawn on top of mask ───────────────────────────────────────
+# ── 3. City boundary line ─────────────────────────────────────────────────────
 city_wgs.boundary.plot(
     ax=ax,
     color='#2C3E50',
     linewidth=1.5,
     linestyle='--',
-    zorder=5
+    zorder=3
 )
 
-# ── Zoom to city boundary extent ──────────────────────────────────────────────
-ax.set_xlim(minx - pad, maxx + pad)
-ax.set_ylim(miny - pad, maxy + pad)
+# ── 4. Land use features (above mask) ────────────────────────────────────────
+layer_order = ['Water', 'Green/Open', 'Transport', 'Industrial', 'Commercial', 'Residential']
 
-# ── Place name labels with offset leader lines ────────────────────────────────
+for i, cat in enumerate(layer_order):
+    subset = gdf_plot[gdf_plot['landuse_class'] == cat]
+    if len(subset) == 0:
+        continue
+    subset.plot(
+        ax=ax,
+        color=color_map[cat],
+        alpha=0.85,
+        linewidth=0.2,
+        edgecolor='white',
+        zorder=4 + i       # each layer slightly above the previous
+    )
+
+# ── 5. Place name labels ──────────────────────────────────────────────────────
 known_places = pd.DataFrame({
     'name': [
         'Palayam', 'Mananchira', 'Calicut Beach', 'Nadakkavu',
@@ -137,18 +141,8 @@ known_places = pd.DataFrame({
         11.2830, 11.2950, 11.2700, 11.3100,
         11.1733, 11.1580, 11.2350
     ],
-    'dx': [
-        -40, -45, -50,  30,
-         35,  40,  45,
-         35,  20, -40,  20,
-        -30,  30,  40
-    ],
-    'dy': [
-        -15, -25, -35,  15,
-         20,  30, -15,
-         20,  25,  20,  30,
-        -20, -20,  20
-    ]
+    'dx': [-40, -45, -50,  30,  35,  40,  45,  35,  20, -40,  20, -30,  30,  40],
+    'dy': [-15, -25, -35,  15,  20,  30, -15,  20,  25,  20,  30, -20, -20,  20]
 })
 
 geometry = [Point(xy) for xy in zip(known_places.lon, known_places.lat)]
@@ -156,12 +150,11 @@ places_wgs = gpd.GeoDataFrame(known_places, geometry=geometry, crs='EPSG:4326')
 
 for idx, row in places_wgs.iterrows():
     x, y = row.geometry.x, row.geometry.y
-    dx, dy = row['dx'], row['dy']
-    ax.plot(x, y, 'o', color='#2C3E50', markersize=4, zorder=6)
+    ax.plot(x, y, 'o', color='#2C3E50', markersize=4, zorder=11)
     ax.annotate(
         row['name'],
         xy=(x, y),
-        xytext=(dx, dy),
+        xytext=(row['dx'], row['dy']),
         textcoords='offset points',
         fontsize=8.5,
         fontweight='bold',
@@ -176,7 +169,7 @@ for idx, row in places_wgs.iterrows():
             shrinkB=3
         ),
         path_effects=[pe.withStroke(linewidth=2.5, foreground='white')],
-        zorder=7
+        zorder=12
     )
 
 # ── Legend ────────────────────────────────────────────────────────────────────

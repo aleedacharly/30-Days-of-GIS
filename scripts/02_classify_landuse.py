@@ -1,15 +1,17 @@
 import geopandas as gpd
 import pandas as pd
 import osmnx as ox
+import warnings
+warnings.filterwarnings('ignore')
 
-
+# ── Load classified data ──────────────────────────────────────────────────────
 gdf = gpd.read_file('data/raw/osm_features.geojson')
 
 def classify_landuse(row):
-    lu = str(row.get('landuse', '')).lower()
+    lu  = str(row.get('landuse',  '')).lower()
     bld = str(row.get('building', '')).lower()
-    lei = str(row.get('leisure', '')).lower()
-    nat = str(row.get('natural', '')).lower()
+    lei = str(row.get('leisure',  '')).lower()
+    nat = str(row.get('natural',  '')).lower()
 
     if lu in ['residential'] or bld in ['residential','house','apartments','detached']:
         return 'Residential'
@@ -28,41 +30,60 @@ def classify_landuse(row):
         return 'Other'
 
 gdf['landuse_class'] = gdf.apply(classify_landuse, axis=1)
-
-# Keep only polygon geometries for area calculation
-gdf_poly = gdf[gdf.geometry.geom_type.isin(['Polygon','MultiPolygon'])].copy()
-
-# Reproject to metric CRS (UTM Zone 43N for Kerala)
+gdf_poly = gdf[gdf.geometry.geom_type.isin(['Polygon', 'MultiPolygon'])].copy()
 gdf_proj = gdf_poly.to_crs(epsg=32643)
 gdf_proj['area_sqm'] = gdf_proj.geometry.area
-
-# Save classified output
 gdf_proj.to_file('data/processed/landuse_classified.geojson', driver='GeoJSON')
-print('Classification complete!')
+
+print("Classification done:")
 print(gdf_proj['landuse_class'].value_counts())
+print()
 
+# ── Try to fetch real ward polygons (OSM admin_level=10 for Indian wards) ────
+print("Attempting to fetch ward boundaries from OSM...")
+wards = None
 
-# Get ward boundaries (OSM admin_level=8 for municipality wards)
-wards = ox.geocode_to_gdf('Kozhikode Municipal Corporation, Kerala', which_result=None)
-# If wards not available, use city boundary as fallback:
-# wards = gpd.read_file('data/raw/kozhikode_boundary.geojson')
+try:
+    # Indian municipal wards are typically admin_level=10
+    result = ox.features_from_place(
+        'Kozhikode Municipal Corporation, Kerala, India',
+        tags={'boundary': 'administrative', 'admin_level': '10'}
+    )
+    result = result[result.geometry.geom_type.isin(['Polygon', 'MultiPolygon'])]
 
-wards = wards.to_crs(epsg=32643)
-gdf_proj = gpd.read_file('data/processed/landuse_classified.geojson')
+    if len(result) > 3:
+        wards = result[['geometry', 'name']].copy()
+        wards = wards.to_crs(epsg=32643)
+        print(f"Found {len(wards)} ward polygons from OSM.")
+    else:
+        print("Too few ward polygons found at admin_level=10.")
+except Exception as e:
+    print(f"Ward fetch failed: {e}")
 
-# Spatial join: assign ward to each polygon
-joined = gpd.sjoin(gdf_proj, wards[['geometry','name']], how='left', predicate='within')
+# ── Spatial join (only if we have real wards) ─────────────────────────────────
+if wards is not None and len(wards) > 3:
+    joined = gpd.sjoin(gdf_proj, wards[['geometry', 'name']], how='left', predicate='within')
+    joined['zone'] = joined['name'].fillna('Unknown')
+else:
+    # No ward polygons — assign everything to one city-level zone
+    joined = gdf_proj.copy()
+    joined['zone'] = 'Kozhikode City'
 
-# Summary statistics: area per class per ward
-summary = joined.groupby(['name','landuse_class'])['area_sqm'].sum().reset_index()
-summary.columns = ['ward', 'landuse_class', 'area_sqm']
-summary['area_ha'] = summary['area_sqm'] / 10000
+# ── Summary statistics ────────────────────────────────────────────────────────
+summary = (
+    joined
+    .groupby(['zone', 'landuse_class'])['area_sqm']
+    .sum()
+    .reset_index()
+)
+summary.columns = ['zone', 'landuse_class', 'area_sqm']
+summary['area_ha'] = (summary['area_sqm'] / 10000).round(2)
 
-# Calculate percentage share per ward
-ward_total = summary.groupby('ward')['area_sqm'].sum().rename('ward_total')
-summary = summary.join(ward_total, on='ward')
-summary['pct_share'] = (summary['area_sqm'] / summary['ward_total'] * 100).round(2)
+zone_total = summary.groupby('zone')['area_sqm'].sum().rename('zone_total')
+summary = summary.join(zone_total, on='zone')
+summary['pct_share'] = (summary['area_sqm'] / summary['zone_total'] * 100).round(2)
+summary = summary.drop(columns='zone_total')
 
 summary.to_csv('outputs/landuse_summary.csv', index=False)
-print('Summary CSV saved!')
-print(summary.head(10))
+print("\nSummary CSV saved to outputs/landuse_summary.csv")
+print(summary.to_string(index=False))

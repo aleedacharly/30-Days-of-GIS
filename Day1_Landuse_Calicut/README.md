@@ -8,7 +8,7 @@ land-use inventory for the Kozhikode Municipal Corporation area.
 
 ## Study Area
 Kozhikode (Calicut) Municipal Corporation, Kerala, India.
-Approx. 118 km\u00b2 urban area with a population of ~600,000.
+Approx. 118 km**2 urban area with a population of ~600,000.
 ![Calicut Map](outputs/subset_kozhikode.png)
 ## Data Sources
 | Dataset              | Source                  | Link                        |

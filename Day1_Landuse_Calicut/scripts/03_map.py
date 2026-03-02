@@ -1,27 +1,26 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import contextily as ctx
 import pandas as pd
-import matplotlib.patheffects as pe
+import numpy as np
 from shapely.geometry import Point, box
 from shapely.ops import unary_union
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
-import numpy as np
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 gdf = gpd.read_file('data/processed/landuse_classified.geojson')
 gdf_wgs = gdf.to_crs(epsg=4326)
 
-# ── City boundary ─────────────────────────────────────────────────────────────
 city = gpd.read_file('data/raw/kozhikode_boundary.geojson')
 city_wgs = city.to_crs(epsg=4326)
 gdf_wgs = gpd.clip(gdf_wgs, city_wgs)
 
-# ── Drop "Other" ──────────────────────────────────────────────────────────────
 gdf_plot = gdf_wgs[gdf_wgs['landuse_class'] != 'Other'].copy()
-print("Features being plotted (excluding Other):")
+print("Features being plotted:")
 print(gdf_plot['landuse_class'].value_counts())
 
 # ── Color palette ─────────────────────────────────────────────────────────────
@@ -34,21 +33,13 @@ color_map = {
     'Water':       '#85C1E9',
 }
 
-# ── Figure ────────────────────────────────────────────────────────────────────
+# ── Main figure ───────────────────────────────────────────────────────────────
 fig, ax = plt.subplots(1, 1, figsize=(13, 15))
 
-# ── Set extent first so basemap tiles load correctly ─────────────────────────
 minx, miny, maxx, maxy = city_wgs.total_bounds
 pad = 0.02
 ax.set_xlim(minx - pad, maxx + pad)
 ax.set_ylim(miny - pad, maxy + pad)
-
-# ── LAYER ORDER (bottom to top):
-#    1. Basemap
-#    2. White mask (outside city)
-#    3. City boundary line
-#    4. Land use features
-#    5. Place labels
 
 # ── 1. Basemap ────────────────────────────────────────────────────────────────
 ctx.add_basemap(
@@ -64,64 +55,39 @@ def polygon_to_patch(geom, **kwargs):
     if geom.geom_type == 'MultiPolygon':
         paths = []
         for poly in geom.geoms:
-            exterior = np.array(poly.exterior.coords)
-            codes = ([Path.MOVETO] +
-                     [Path.LINETO] * (len(exterior) - 2) +
-                     [Path.CLOSEPOLY])
-            paths.append(Path(exterior, codes))
+            ext = np.array(poly.exterior.coords)
+            codes = [Path.MOVETO] + [Path.LINETO]*(len(ext)-2) + [Path.CLOSEPOLY]
+            paths.append(Path(ext, codes))
             for interior in poly.interiors:
                 ic = np.array(interior.coords)
-                codes = ([Path.MOVETO] +
-                         [Path.LINETO] * (len(ic) - 2) +
-                         [Path.CLOSEPOLY])
+                codes = [Path.MOVETO] + [Path.LINETO]*(len(ic)-2) + [Path.CLOSEPOLY]
                 paths.append(Path(ic, codes))
-        combined = Path.make_compound_path(*paths)
-        return PathPatch(combined, **kwargs)
+        return PathPatch(Path.make_compound_path(*paths), **kwargs)
     else:
-        exterior = np.array(geom.exterior.coords)
-        codes = ([Path.MOVETO] +
-                 [Path.LINETO] * (len(exterior) - 2) +
-                 [Path.CLOSEPOLY])
-        return PathPatch(Path(exterior, codes), **kwargs)
+        ext = np.array(geom.exterior.coords)
+        codes = [Path.MOVETO] + [Path.LINETO]*(len(ext)-2) + [Path.CLOSEPOLY]
+        return PathPatch(Path(ext, codes), **kwargs)
 
 big_box = box(minx - pad, miny - pad, maxx + pad, maxy + pad)
 city_union = unary_union(city_wgs.geometry)
 mask_geom = big_box.difference(city_union)
-
 ax.add_patch(polygon_to_patch(
-    mask_geom,
-    facecolor='white',
-    edgecolor='none',
-    zorder=2,
-    linewidth=0
+    mask_geom, facecolor='white', edgecolor='none', zorder=2, linewidth=0
 ))
 
-# ── 3. City boundary line ─────────────────────────────────────────────────────
-city_wgs.boundary.plot(
-    ax=ax,
-    color='#2C3E50',
-    linewidth=1.5,
-    linestyle='--',
-    zorder=3
-)
+# ── 3. City boundary ──────────────────────────────────────────────────────────
+city_wgs.boundary.plot(ax=ax, color='#2C3E50', linewidth=1.5, linestyle='--', zorder=3)
 
-# ── 4. Land use features (above mask) ────────────────────────────────────────
+# ── 4. Land use features ──────────────────────────────────────────────────────
 layer_order = ['Water', 'Green/Open', 'Transport', 'Industrial', 'Commercial', 'Residential']
-
 for i, cat in enumerate(layer_order):
     subset = gdf_plot[gdf_plot['landuse_class'] == cat]
     if len(subset) == 0:
         continue
-    subset.plot(
-        ax=ax,
-        color=color_map[cat],
-        alpha=0.85,
-        linewidth=0.2,
-        edgecolor='white',
-        zorder=4 + i       # each layer slightly above the previous
-    )
+    subset.plot(ax=ax, color=color_map[cat], alpha=0.85,
+                linewidth=0.2, edgecolor='white', zorder=4+i)
 
-# ── 5. Place name labels ──────────────────────────────────────────────────────
+# ── 5. Place labels ───────────────────────────────────────────────────────────
 known_places = pd.DataFrame({
     'name': [
         'Palayam', 'Mananchira', 'Calicut Beach', 'Nadakkavu',
@@ -152,25 +118,59 @@ for idx, row in places_wgs.iterrows():
     x, y = row.geometry.x, row.geometry.y
     ax.plot(x, y, 'o', color='#2C3E50', markersize=4, zorder=11)
     ax.annotate(
-        row['name'],
-        xy=(x, y),
+        row['name'], xy=(x, y),
         xytext=(row['dx'], row['dy']),
         textcoords='offset points',
-        fontsize=8.5,
-        fontweight='bold',
-        color='#1A1A2E',
-        ha='center',
-        va='center',
-        arrowprops=dict(
-            arrowstyle='-',
-            color='#555555',
-            linewidth=0.8,
-            shrinkA=0,
-            shrinkB=3
-        ),
+        fontsize=8.5, fontweight='bold', color='#1A1A2E',
+        ha='center', va='center',
+        arrowprops=dict(arrowstyle='-', color='#555555',
+                        linewidth=0.8, shrinkA=0, shrinkB=3),
         path_effects=[pe.withStroke(linewidth=2.5, foreground='white')],
         zorder=12
     )
+
+# ── 6. India inset map ────────────────────────────────────────────────────────
+ax_inset = inset_axes(ax, width="22%", height="22%", loc='upper right',
+                      bbox_to_anchor=ax.bbox, bbox_transform=ax.transAxes)
+
+try:
+    # Download India boundary from Natural Earth via geopandas datasets
+    import geodatasets
+    world = gpd.read_file(geodatasets.get_path('naturalearth.land'))
+    india = world[world.geometry.intersects(
+        box(68, 6, 98, 38)
+    )].copy()
+    india.plot(ax=ax_inset, color='#F0F0F0', edgecolor='#AAAAAA', linewidth=0.5)
+except Exception:
+    # Fallback — download directly
+    try:
+        url = "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
+        world = gpd.read_file(url)
+        india = world[world['ADMIN'] == 'India']
+        india.plot(ax=ax_inset, color='#F0F0F0', edgecolor='#AAAAAA', linewidth=0.5)
+    except Exception:
+        # Final fallback — just draw a box
+        ax_inset.set_facecolor('#E8F4F8')
+
+# Plot Kozhikode marker on inset
+ax_inset.plot(75.78, 11.25, 'o', color='#C0392B', markersize=6, zorder=5)
+ax_inset.plot(75.78, 11.25, 'o', color='white', markersize=3, zorder=6)
+
+# Zoom inset to India extent
+ax_inset.set_xlim(68, 98)
+ax_inset.set_ylim(6, 38)
+ax_inset.set_aspect('equal')
+ax_inset.set_xticks([])
+ax_inset.set_yticks([])
+ax_inset.set_facecolor('#D6EAF8')  # light blue sea colour
+for spine in ax_inset.spines.values():
+    spine.set_edgecolor('#AAAAAA')
+    spine.set_linewidth(0.8)
+
+# Label
+ax_inset.text(0.5, -0.06, 'Location in India',
+              transform=ax_inset.transAxes,
+              ha='center', fontsize=7, color='#555555', style='italic')
 
 # ── Legend ────────────────────────────────────────────────────────────────────
 patches = [mpatches.Patch(color=c, label=l) for l, c in color_map.items()]
@@ -178,16 +178,9 @@ patches.append(mpatches.Patch(
     facecolor='none', edgecolor='#2C3E50',
     linestyle='--', linewidth=1.5, label='City Boundary'
 ))
-ax.legend(
-    handles=patches,
-    loc='lower left',
-    fontsize=11,
-    title='Land Use Category',
-    title_fontsize=12,
-    framealpha=0.95,
-    edgecolor='#CCCCCC',
-    fancybox=True
-)
+ax.legend(handles=patches, loc='lower left', fontsize=11,
+          title='Land Use Category', title_fontsize=12,
+          framealpha=0.95, edgecolor='#CCCCCC', fancybox=True)
 
 # ── Title & north arrow ───────────────────────────────────────────────────────
 ax.set_title(
@@ -198,8 +191,7 @@ ax.set_title(
 ax.text(
     0.99, 0.01,
     'N ↑\nProjection: WGS84\nData: © OSM contributors',
-    transform=ax.transAxes,
-    ha='right', va='bottom', fontsize=9,
+    transform=ax.transAxes, ha='right', va='bottom', fontsize=9,
     style='italic', color='#555555',
     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7)
 )

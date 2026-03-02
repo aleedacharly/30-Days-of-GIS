@@ -1,17 +1,17 @@
 import osmnx as ox
 import geopandas as gpd
+import pandas as pd
 from shapely.geometry import Polygon
 import warnings
 warnings.filterwarnings('ignore')
 
-# ── Manually define Kozhikode Municipal Corporation boundary ──────────────────
-# OSM does not have the KMC boundary as a polygon.
-# These coordinates trace the actual ~118 km² municipal area.
-# Source: approximated from KMC ward map and GADM Level 3 data.
+# ── Define KMC boundary (land only — no sea on west) ─────────────────────────
+# Coastline runs roughly at lon 75.737 for Kozhikode
+# Western edge follows the coast, not extending into the sea
 
 kozhikode_kmc_coords = [
-    (75.7200, 11.1600),   # SW — Feroke/Ramanattukara south
-    (75.7600, 11.1500),   # SE bottom
+    (75.7370, 11.1600),   # SW coast — Ramanattukara
+    (75.7600, 11.1500),   # South
     (75.8200, 11.1700),   # Feroke east
     (75.8500, 11.1900),   # East boundary south
     (75.8700, 11.2300),   # East boundary mid
@@ -20,11 +20,12 @@ kozhikode_kmc_coords = [
     (75.8200, 11.3400),   # North east
     (75.7900, 11.3500),   # North
     (75.7600, 11.3400),   # North west
-    (75.7400, 11.3200),   # West north
-    (75.7250, 11.2800),   # West mid — coastal area
-    (75.7150, 11.2400),   # West — Calicut Beach area
-    (75.7100, 11.2000),   # SW coast
-    (75.7200, 11.1600),   # back to start
+    (75.7400, 11.3200),   # West north — coast
+    (75.7370, 11.2900),   # Coast mid-north
+    (75.7370, 11.2600),   # Coast — Calicut Beach area
+    (75.7370, 11.2300),   # Coast mid-south
+    (75.7370, 11.1900),   # Coast south
+    (75.7370, 11.1600),   # back to SW start
 ]
 
 kmc_polygon = Polygon(kozhikode_kmc_coords)
@@ -35,17 +36,12 @@ city = gpd.GeoDataFrame(
 )
 
 area_km2 = city.to_crs(epsg=32643).geometry.area.sum() / 1e6
-print(f"Manual KMC boundary area: {area_km2:.1f} km²")
-print(f"Bounds: {city.total_bounds.round(4)}")
-
-# Save boundary
+print(f"KMC boundary area: {area_km2:.1f} km²")
 city.to_file('data/raw/kozhikode_boundary.geojson', driver='GeoJSON')
-print("Boundary saved to data/raw/kozhikode_boundary.geojson")
+print("Boundary saved.")
 
-# ── Fetch OSM features within this boundary ───────────────────────────────────
+# ── Fetch OSM features ────────────────────────────────────────────────────────
 print("\nFetching OSM features...")
-
-# Use the polygon directly instead of a place name string
 polygon = city.geometry.iloc[0]
 
 tags_list = [
@@ -64,10 +60,7 @@ for tags in tags_list:
     except Exception as e:
         print(f"  {list(tags.keys())[0]}: failed — {e}")
 
-import pandas as pd
 if all_features:
     combined = pd.concat(all_features)
     combined.to_file('data/raw/osm_features.geojson', driver='GeoJSON')
     print(f"\nTotal features saved: {len(combined)}")
-else:
-    print("No features fetched — check internet connection")

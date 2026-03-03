@@ -130,9 +130,10 @@ Python 3.10+, geopandas, osmnx, contextily, matplotlib
 ## How to Reproduce
 ```bash
 pip install geopandas osmnx contextily matplotlib geodatasets
-python scripts/01_fetch_osm.py
-python scripts/02_classify_landuse.py
-python scripts/03_map.py
+python scripts/fetch_osm.py
+python scripts/classify_landuse.py
+python scripts/map.py
+python scripts/analysis.py
 ```
 
 ## Outputs

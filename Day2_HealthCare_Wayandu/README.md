@@ -20,13 +20,12 @@ Wayanad District, Kerala, India
 
 
 ## Datasets Used
-| Dataset | Source | URL | Format |
-|---------|--------|-----|--------|
-| Wayanad road network | OpenStreetMap via OSMnx | https://www.openstreetmap.org | In-memory GraphML |
-| PHC locations | Overpass Turbo | https://overpass-turbo.io | GeoJSON |
-| Village centroids | Overpass Turbo | https://overpass-turbo.io | GeoJSON |
-| Population grid | WorldPop 2020 | https://data.worldpop.org/GIS/Population/Global_2000_2020/2020/IND/ind_ppp_2020.tif | GeoTIFF |
-
+| Dataset | Source | URL | Query / Notes | Format |
+|---------|--------|-----|---------------|--------|
+| Wayanad road network | OpenStreetMap via OSMnx | https://www.openstreetmap.org | Fetched programmatically via `ox.graph_from_place('Wayanad, Kerala, India', network_type='drive')` | In-memory GraphML |
+| PHC locations | Overpass Turbo | https://overpass-turbo.io | `[out:json]; area[name="Wayanad"]->.a; (node[amenity=hospital](area.a); node[amenity=clinic](area.a); node[amenity=doctors](area.a);); out body;` | GeoJSON |
+| Village centroids | Overpass Turbo | https://overpass-turbo.io | `[out:json]; area[name="Wayanad"]->.a; (node[place=village](area.a); node[place=hamlet](area.a); node[place=town](area.a);); out body;` | GeoJSON |
+| Population grid | WorldPop 2020 | https://data.worldpop.org/GIS/Population/Global_2000_2020/2020/IND/ind_ppp_2020.tif | Direct download, clipped to Wayanad using rasterio mask | GeoTIFF |
 
 ## Method
 1. Downloaded drive-mode road network for Wayanad using OSMnx

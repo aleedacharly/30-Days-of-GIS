@@ -32,11 +32,68 @@ Approx. 118 square kilometers urban area with a population of ~600,000.
 - Choropleth mapping with continuous colour scale
 
 ## Key Results
-[Fill in after completing the analysis]
-- Total features fetched: XXX polygons
-- Dominant land use: [your finding]
-- Ward with highest residential \u25ba [ward name] (XX%)
-- Ward with most green space \u25ba [ward name] (XX%)
+
+### Feature Overview
+| Metric | Value |
+|--------|-------|
+| Total OSM features fetched | 10,598 |
+| Classified features | 4,578 |
+| Unclassified (Other) | 6,020 (56.8%) |
+| Total classified area | 2,848.9 ha |
+
+> **Note:** 56.8% of features could not be classified due to missing OSM tags.
+> This reflects the volunteer-driven nature of OSM mapping in Indian cities —
+> building geometries exist but semantic land-use attributes are largely absent.
+
+---
+
+### Land Use Area Breakdown
+| Land Use Class | Area (ha) | % of Classified Area |
+|----------------|-----------|----------------------|
+| 🟢 Green/Open  | 1,773.6   | 62.3% |
+| 🔵 Water       | 718.0     | 25.2% |
+| 🟠 Residential | 154.0     | 5.4%  |
+| ⚫ Industrial  | 118.0     | 4.1%  |
+| 🔴 Commercial  | 66.8      | 2.3%  |
+| 🔷 Transport   | 18.5      | 0.6%  |
+| **TOTAL**      | **2,848.9** | **100%** |
+
+---
+
+### Feature Count by Class
+| Land Use Class | Number of Features |
+|----------------|--------------------|
+| Residential    | 3,612 |
+| Commercial     | 392   |
+| Water          | 231   |
+| Green/Open     | 200   |
+| Industrial     | 134   |
+| Transport      | 9     |
+
+---
+
+### Key Findings
+- **Dominant land use by area ►** Green/Open (62.3%) — driven by the Kallai River
+  corridor, coastal vegetation, and agricultural patches in the northern boundary
+- **Dominant land use by feature count ►** Residential (3,612 features) —
+  confirming dense housing stock in the urban core despite modest area share
+- **Water bodies ►** Cover 718 ha (25.2%) — dispersed backwaters, ponds,
+  and river branches signal significant latent flood risk across the municipality
+- **Commercial underrepresentation ►** Only 66.8 ha (2.3%) classified as
+  commercial despite Kozhikode being a major trading city — a direct consequence
+  of OSM tag incompleteness, not ground reality
+- **Ward-level breakdown ►** Ward boundary data unavailable from OSM for
+  Kozhikode Municipal Corporation — analysis performed at city level only.
+  Ward-level disaggregation requires official KMC cadastral data.
+
+---
+
+### Interpretation Note
+The large Green/Open area share (62.3%) should be interpreted carefully.
+It includes not just parks and recreational spaces but also OSM-tagged forests,
+agricultural land, and riverine vegetation within the municipal boundary.
+A field-verified LULC survey would likely show a lower true green-space figure
+once untagged built-up land is properly attributed.
 
 ## Critical Reflection
 Q1: Planner perspective: What decisions could a Kozhikode urban planner make using your land-use map? What decisions could they NOT make with it?
@@ -66,7 +123,7 @@ Python 3.10+, geopandas, osmnx, contextily, matplotlib
 
 ## How to Reproduce
 ```bash
-pip install geopandas osmnx contextily matplotlib
+pip install geopandas osmnx contextily matplotlib geodatasets
 python scripts/01_fetch_osm.py
 python scripts/02_classify_landuse.py
 python scripts/03_map.py

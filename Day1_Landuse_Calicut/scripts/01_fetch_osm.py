@@ -1,4 +1,5 @@
 import osmnx as ox
+import os
 import geopandas as gpd
 import pandas as pd
 import numpy as np
@@ -72,6 +73,9 @@ city = gpd.GeoDataFrame(
 )
 area_km2 = city.to_crs(epsg=32643).geometry.area.sum() / 1e6
 print(f"Final KMC boundary area: {area_km2:.1f} km²")
+os.makedirs('data/raw', exist_ok=True)
+os.makedirs('data/processed', exist_ok=True)
+os.makedirs('outputs', exist_ok=True)
 city.to_file('data/raw/kozhikode_boundary.geojson', driver='GeoJSON')
 print("Boundary saved to data/raw/kozhikode_boundary.geojson")
 

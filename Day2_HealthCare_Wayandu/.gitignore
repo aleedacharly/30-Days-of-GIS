@@ -4,6 +4,7 @@
 *.geojson
 *.json
 *.pkl
+*.tif
 
 # --------------------
 # Cache directories

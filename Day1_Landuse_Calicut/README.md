@@ -18,12 +18,13 @@ Approx. 118 square kilometers urban area with a population of ~600,000.
 | Ward boundaries      | OSM admin level 8       | Via osmnx                  |
 
 ## Methods
-1. Fetched OSM features (buildings, land use, amenities) using osmnx.features_from_place()
-2. Classified features into 6 categories using tag-based rules
-3. Reprojected to UTM Zone 43N (EPSG:32643) for accurate area calculation
-4. Performed spatial join with ward boundaries
-5. Calculated % area per land-use class per ward
-6. Rendered choropleth map with CartoDB Positron basemap
+1. Defined Kozhikode Municipal Corporation boundary manually using coordinate tracing, then clipped to the Arabian Sea coastline using Natural Earth land polygons to remove sea overlap
+2. Fetched OSM features (buildings, landuse, leisure, natural tags) within the boundary using osmnx.features_from_polygon() — note: features_from_place() was not used as OSM does not have KMC as a named polygon boundary
+3. Classified features into 6 categories (Residential, Commercial, Industrial, Green/Open, Transport, Water) using tag-based rules applied to landuse, building, leisure, and natural OSM attributes
+4. Reprojected to UTM Zone 43N (EPSG:32643) for accurate area calculation in square metres
+5. Spatial join with ward boundaries was not possible — OSM does not contain ward polygon data for Kozhikode Municipal Corporation; analysis was performed at city level as a single zone
+6. Calculated area and percentage share per land-use class across the full municipal boundary
+7. Rendered map with GeoPandas + Contextily using CartoDB Positron NoLabels basemap, with white mask outside city boundary and India location inset
 
 ## GIS Concepts Applied
 - Vector data loading and CRS reprojection
@@ -111,12 +112,17 @@ Q4: Missing data: What other data layers would you need to make this analysis po
 - To make this analysis genuinely policy-ready, the following additional data layers would be needed. Population density at ward or sub-ward level from the Census of India 2011 or the upcoming 2024 census, to weight the land-use findings by the number of people actually affected. Building age data to identify ageing housing stock requiring structural assessment. Floor space index or floor area ratio to understand vertical density, since a map of building footprints tells nothing about how many floors those buildings have. Road network centrality data to understand which residential clusters are well-connected versus isolated. Household income or deprivation index data from NFHS-5 or Socioeconomic Caste Census to identify which land-use zones overlap with vulnerable populations. Drainage network and elevation data from SRTM to convert the water body observations into an actual flood risk assessment. Without these layers, the current map describes what land is used for, but cannot answer who is affected, how severely, or where intervention is most urgent.
 
 Q5: Scale question: Your analysis is for the entire municipal area. Would ward-level analysis give a different picture? 
-- Ward-level analysis would give a substantially different picture and would likely reveal patterns invisible at the municipal scale. Kozhikode Municipal Corporation contains 75 wards with highly uneven land-use compositions. At the city scale, residential land appears uniformly distributed across the urban core. At the ward scale, some wards near Beypore and Feroke are likely dominated by industrial and port-related uses, while wards around Mananchira and Palayam would show higher commercial density. Wards in the northern section of the boundary near Elathur would likely show very low classification coverage, confirming that OSM tag incompleteness is concentrated in peri-urban wards rather than the historic core.
+- Ward-level analysis would give a substantially different picture and would likely reveal patterns invisible at the municipal scale. Kozhikode Municipal Corporation contains 75 wards with highly uneven land-use compositions. However, OSM does not provide ward boundary polygons for Kozhikode — the spatial join in this analysis defaulted to a single city-level zone. This itself is a significant finding: without official ward boundary data from KMC, sub-municipal analysis is not possible using open data alone. Obtaining ward shapefiles from the Kerala Local Government Department or digitising them from the official KMC ward map would be the necessary next step before any ward-level disaggregation could be attempted. 
 
 What is missing from this analysis?
 - Floor area ratio (FAR) data for density analysis
 - Temporal comparison (land use change over time)
 - Population data joined to land-use classes
+- Official KMC ward boundary polygons (not available on OSM)
+- Coastline accuracy — western boundary approximated; 
+  official Survey of India coastline data would improve precision
+- Green/Open area (62.3%) likely inflated — includes riverine 
+  vegetation and agricultural patches, not just urban green space
 
 ## Environment
 Python 3.10+, geopandas, osmnx, contextily, matplotlib

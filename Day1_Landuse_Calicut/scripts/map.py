@@ -114,22 +114,22 @@ known_places = pd.DataFrame({
         'Palayam', 'Mananchira', 'Calicut Beach', 'Nadakkavu',
         'Arayidathupalam', 'Mavoor Road', 'Medical College',
         'Chevayur', 'Thondayad', 'West Hill', 'Elathur',
-        'Beypore', 'Feroke', 'Kunnamangalam'
+        'Beypore', 'Kunnamangalam'
     ],
     'lon': [
         75.7804, 75.7762, 75.7721, 75.7880,
         75.7950, 75.8020, 75.8033,
         75.8100, 75.8180, 75.7950, 75.8300,
-        75.8133, 75.8350, 75.8450
+        75.8133, 75.8450
     ],
     'lat': [
         11.2588, 11.2530, 11.2490, 11.2650,
         11.2700, 11.2750, 11.2620,
         11.2830, 11.2950, 11.2700, 11.3100,
-        11.1733, 11.1580, 11.2350
+        11.1733, 11.2350
     ],
-    'dx': [-40, -45, -50,  30,  35,  40,  45,  35,  20, -40,  20, -30,  30,  40],
-    'dy': [-15, -25, -35,  15,  20,  30, -15,  20,  25,  20,  30, -20, -20,  20]
+    'dx': [-40, -45, -50,  30,  35,  40,  45,  35,  20, -40,  20, -30,  40],
+    'dy': [-15, -25, -35,  15,  20,  30, -15,  20,  25,  20,  30, -20, 20]
 })
 
 geometry = [Point(xy) for xy in zip(known_places.lon, known_places.lat)]

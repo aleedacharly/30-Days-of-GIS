@@ -3,6 +3,7 @@
 # --------------------
 *.geojson
 *.json
+*.pkl
 
 # --------------------
 # Cache directories

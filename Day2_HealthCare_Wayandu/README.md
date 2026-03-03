@@ -20,12 +20,12 @@ Wayanad District, Kerala, India
 
 
 ## Datasets Used
-| Dataset | Source | Format |
-|---------|--------|--------|
-| Wayanad road network | OpenStreetMap via OSMnx | In-memory GraphML |
-| PHC locations | Overpass Turbo / Kerala DHS | GeoJSON |
-| Village centroids | Census 2011 / OSM | GeoJSON |
-| Population grid | WorldPop 2020 Kerala 100m | GeoTIFF |
+| Dataset | Source | URL | Format |
+|---------|--------|-----|--------|
+| Wayanad road network | OpenStreetMap via OSMnx | https://www.openstreetmap.org | In-memory GraphML |
+| PHC locations | Overpass Turbo | https://overpass-turbo.io | GeoJSON |
+| Village centroids | Overpass Turbo | https://overpass-turbo.io | GeoJSON |
+| Population grid | WorldPop 2020 | https://data.worldpop.org/GIS/Population/Global_2000_2020/2020/IND/ind_ppp_2020.tif | GeoTIFF |
 
 
 ## Method

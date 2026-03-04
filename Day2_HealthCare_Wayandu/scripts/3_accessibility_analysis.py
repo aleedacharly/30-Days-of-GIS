@@ -6,7 +6,7 @@ import numpy as np
 
 
 # Load all layers
-villages = gpd.read_file('data/raw/wayanad_villages.geojson').to_crs(epsg=4326)
+villages = gpd.read_file('data/raw/wayanad_villages_corrected.geojson').to_crs(epsg=4326)
 iso_15 = gpd.read_file('data/processed/isochrone_15min.geojson').to_crs(epsg=4326)
 iso_30 = gpd.read_file('data/processed/isochrone_30min.geojson').to_crs(epsg=4326)
 

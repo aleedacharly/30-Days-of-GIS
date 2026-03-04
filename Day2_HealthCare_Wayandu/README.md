@@ -94,22 +94,6 @@ python scripts/04_map.py
 | Population beyond 30 min | 800 | Expected 50,000–100,000 | WorldPop estimate now covers realistic underserved zone |
 | Top underserved villages | Tholpetty (505), Thirunelli (295) | To be updated after rerun | Same villages expected to remain priority — likely joined by more |
 
-### Confirmed Results (Before Fix)
-- Total PHCs mapped: 115
-- Villages within 15 min: 225 (94.9%)
-- Villages within 30 min: 10 (4.2%)
-- Underserved villages (>30 min): 2 (0.8%)
-- Estimated population beyond 30 min: 800
-- Top underserved villages: Tholpetty (pop: 505), Thirunelli (pop: 295)
-
-### Corrected Results (After Fix)
-- Total PHCs mapped: [UPDATE AFTER RERUN]
-- Villages within 15 min: [UPDATE AFTER RERUN]
-- Villages within 30 min: [UPDATE AFTER RERUN]
-- Underserved villages (>30 min): [UPDATE AFTER RERUN]
-- Estimated population beyond 30 min: [UPDATE AFTER RERUN]
-- Top 3 most underserved villages: [UPDATE AFTER RERUN]
-
 
 ## Limitations
 - OSM road network in rural Wayanad is incomplete — foot tracks and

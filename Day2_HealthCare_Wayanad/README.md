@@ -91,7 +91,6 @@ python scripts/04_map.py
 | Villages within 15 min | 225 (94.9%) | 175 (71.1%) | Fewer PHCs + slower road speeds shrunk the green isochrone zone |
 | Villages within 30 min | 10 (4.2%) | 60 (24.4%) | The 15–30 min band widened as isochrones shrank to realistic sizes |
 | Underserved villages >30 min | 2 (0.8%) | 11 (4.5%) | More tribal hamlets now correctly flagged as unreachable |
-| Population beyond 30 min | 800 | [RERUN AFTER BUG FIX] | Negative value is a raster clipping bug — fix and rerun |
 | Top underserved villages | Tholpetty (505), Thirunelli (295) | Kattikkulam (2,243), Ammaani (1,626), Thazhe Ammaani (779) | New villages emerged after correcting PHC filter |
 
 

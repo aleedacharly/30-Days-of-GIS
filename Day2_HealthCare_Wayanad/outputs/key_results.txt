@@ -4,7 +4,7 @@ Total PHCs mapped: 27
 Villages within 15 min: 175 (71.1%)
 Villages within 30 min: 60 (24.4%)
 Underserved villages (>30 min): 11 (4.5%)
-Estimated population beyond 30 min: -4,193,117
+Estimated population beyond 30 min: 6,680
 Top 3 most underserved villages:
   1. Kattikkulam (population est: 2,243)
   2. Ammaani (population est: 1,626)

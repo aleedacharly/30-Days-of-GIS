@@ -41,7 +41,7 @@ stats = rasterstats.zonal_stats(
     stats=['sum'],
     nodata=-9999
 )
-villages['population_est'] = [s['sum'] if s['sum'] else 0 for s in stats]
+villages['population_est'] = [abs(s['sum']) if s['sum'] and s['sum'] > 0 else 0 for s in stats]
 
 
 # Underserved villages

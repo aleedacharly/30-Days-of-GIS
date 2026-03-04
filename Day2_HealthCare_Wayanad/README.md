@@ -87,12 +87,11 @@ python scripts/04_map.py
 
 | Metric | Before Fix | After Fix | What Changed |
 |--------|-----------|-----------|--------------|
-| Total PHCs mapped | 115 | ~38 | Removed private clinics, ayurvedic centres and individual doctors — kept government PHCs only |
-| Villages within 15 min | 225 (94.9%) | Expected 40–55% | Fewer PHCs + slower road speeds shrink the green isochrone zone significantly |
-| Villages within 30 min | 10 (4.2%) | Expected 20–30% | The 15–30 min band widens as isochrones shrink to realistic sizes |
-| Underserved villages >30 min | 2 (0.8%) | Expected 25–40% | True picture of tribal hamlet isolation now visible |
-| Population beyond 30 min | 800 | Expected 50,000–100,000 | WorldPop estimate now covers realistic underserved zone |
-| Top underserved villages | Tholpetty (505), Thirunelli (295) | To be updated after rerun | Same villages expected to remain priority — likely joined by more |
+| Total PHCs mapped | 115 | 27 | Removed private clinics, ayurvedic centres and individual doctors — kept government PHCs only |
+| Villages within 15 min | 225 (94.9%) | 175 (71.1%) | Fewer PHCs + slower road speeds shrunk the green isochrone zone |
+| Villages within 30 min | 10 (4.2%) | 60 (24.4%) | The 15–30 min band widened as isochrones shrank to realistic sizes |
+| Underserved villages >30 min | 2 (0.8%) | 11 (4.5%) | More tribal hamlets now correctly flagged as unreachable |
+| Top underserved villages | Tholpetty (505), Thirunelli (295) | Kattikkulam (2,243), Ammaani (1,626), Thazhe Ammaani (779) | New villages emerged after correcting PHC filter |
 
 
 ## Limitations

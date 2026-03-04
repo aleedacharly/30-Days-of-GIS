@@ -10,20 +10,3 @@
 # Cache directories
 # --------------------
 cache/
-data/cache/
-__cache__/
-
-# --------------------
-# Python (if applicable)
-# --------------------
-__pycache__/
-*.pyc
-.env
-.venv/
-venv/
-
-# --------------------
-# OS junk
-# --------------------
-.DS_Store
-Thumbs.db

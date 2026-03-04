@@ -10,7 +10,7 @@ threshold to support mobile health unit deployment decisions.
 
 ## Region
 Wayanad District, Kerala, India
-![Wayandu Map](outputs/access_map1.png)
+![Wayandu Map](outputs/access.png)
 
 ## GIS Concepts Applied
 - Road network graph construction with OSMnx

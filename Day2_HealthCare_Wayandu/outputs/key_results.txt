@@ -1,10 +1,11 @@
 KEY RESULTS — DAY 02 WAYANAD
 ==================================================
-Total PHCs mapped: 115
-Villages within 15 min: 225 (94.9%)
-Villages within 30 min: 10 (4.2%)
-Underserved villages (>30 min): 2 (0.8%)
-Estimated population beyond 30 min: 800
+Total PHCs mapped: 27
+Villages within 15 min: 175 (71.1%)
+Villages within 30 min: 60 (24.4%)
+Underserved villages (>30 min): 11 (4.5%)
+Estimated population beyond 30 min: -4,193,117
 Top 3 most underserved villages:
-  1. Tholpetty (population est: 505)
-  2. Thirunelli (population est: 295)
+  1. Kattikkulam (population est: 2,243)
+  2. Ammaani (population est: 1,626)
+  3. Thazhe Ammaani (population est: 779)

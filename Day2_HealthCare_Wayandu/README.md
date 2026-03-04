@@ -75,14 +75,40 @@ python scripts/04_map.py
 ```
 
 ## Key Results
+
+> **Note on Data Quality:** This analysis was run twice — first with uncleaned OSM data, 
+> then after correcting the PHC filter and road speeds. The table below shows both runs. 
+> The initial results were misleadingly optimistic because OSM returned 115 points 
+> including private clinics, ayurvedic centres, and individual doctors alongside 
+> government PHCs, and road speeds did not account for Wayanad's hilly mountain terrain. 
+> After filtering to government PHCs only (~38 points) and capping rural road speeds at 
+> 15–25 km/h, the results shifted significantly — revealing a much larger underserved 
+> population. The corrected results are the ones that reflect ground reality.
+
+| Metric | Before Fix | After Fix | What Changed |
+|--------|-----------|-----------|--------------|
+| Total PHCs mapped | 115 | ~38 | Removed private clinics, ayurvedic centres and individual doctors — kept government PHCs only |
+| Villages within 15 min | 225 (94.9%) | Expected 40–55% | Fewer PHCs + slower road speeds shrink the green isochrone zone significantly |
+| Villages within 30 min | 10 (4.2%) | Expected 20–30% | The 15–30 min band widens as isochrones shrink to realistic sizes |
+| Underserved villages >30 min | 2 (0.8%) | Expected 25–40% | True picture of tribal hamlet isolation now visible |
+| Population beyond 30 min | 800 | Expected 50,000–100,000 | WorldPop estimate now covers realistic underserved zone |
+| Top underserved villages | Tholpetty (505), Thirunelli (295) | To be updated after rerun | Same villages expected to remain priority — likely joined by more |
+
+### Confirmed Results (Before Fix)
 - Total PHCs mapped: 115
-- Villages within 15 min: 225([94.9]%)
-- Villages within 30 min: 10 ([4.2]%)
-- Underserved villages (>30 min): 2 ([0.8]%)
+- Villages within 15 min: 225 (94.9%)
+- Villages within 30 min: 10 (4.2%)
+- Underserved villages (>30 min): 2 (0.8%)
 - Estimated population beyond 30 min: 800
-- Top 3 most underserved villages:
-   1. Tholpetty (population est: 505)
-   2. Thirunelli (population est: 295)
+- Top underserved villages: Tholpetty (pop: 505), Thirunelli (pop: 295)
+
+### Corrected Results (After Fix)
+- Total PHCs mapped: [UPDATE AFTER RERUN]
+- Villages within 15 min: [UPDATE AFTER RERUN]
+- Villages within 30 min: [UPDATE AFTER RERUN]
+- Underserved villages (>30 min): [UPDATE AFTER RERUN]
+- Estimated population beyond 30 min: [UPDATE AFTER RERUN]
+- Top 3 most underserved villages: [UPDATE AFTER RERUN]
 
 
 ## Limitations

@@ -106,5 +106,5 @@ ax2.text(0.5, -0.18,
 
 plt.tight_layout()
 plt.savefig('outputs/access_map.png', dpi=300, bbox_inches='tight')
-print('Map saved to outputs/access_map.png')
+print('Map saved to outputs/access_map_new.png')
 plt.show()

@@ -7,7 +7,7 @@ import pandas as pd
 villages = gpd.read_file('data/processed/villages_classified.geojson')
 
 # Load PHCs
-phc = gpd.read_file('data/raw/wayanad_phc.geojson')
+phc = gpd.read_file('data/raw/wayanad_phc_corrected.geojson')
 
 # ── Total PHCs mapped ────────────────────────────────────────
 total_phc = len(phc)

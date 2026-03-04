@@ -9,7 +9,7 @@ villages = gpd.read_file('data/processed/villages_classified.geojson')
 roads = gpd.read_file('data/processed/wayanad_roads.geojson')
 iso_15 = gpd.read_file('data/processed/isochrone_15min.geojson')
 iso_30 = gpd.read_file('data/processed/isochrone_30min.geojson')
-phc = gpd.read_file('data/raw/wayanad_phc.geojson')
+phc = gpd.read_file('data/raw/wayanad_phc_corrected.geojson')
 
 # Reproject all to Web Mercator for contextily basemap
 crs = 'EPSG:3857'

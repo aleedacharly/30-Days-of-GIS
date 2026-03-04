@@ -13,7 +13,7 @@ with open('data/processed/wayanad_network.pkl', 'rb') as f:
 
 
 # Load PHC locations
-phc = gpd.read_file('data/raw/wayanad_phc.geojson')
+phc = gpd.read_file('data/raw/wayanad_phc_corrected.geojson')
 phc = phc.to_crs(epsg=4326)  # Ensure WGS84
 
 # Function to compute isochrone polygon for a single point

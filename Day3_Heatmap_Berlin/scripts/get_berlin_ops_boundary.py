@@ -1,29 +1,31 @@
+import osmnx as ox
 import geopandas as gpd
-import rasterio
-import numpy as np
 
-districts = gpd.read_file('data/raw/berlin_districts.geojson')
-districts = districts.to_crs('EPSG:25833')
+# The 12 official Berlin Bezirke
+bezirke_names = [
+    'Mitte', 'Friedrichshain-Kreuzberg', 'Pankow',
+    'Charlottenburg-Wilmersdorf', 'Spandau', 'Steglitz-Zehlendorf',
+    'Tempelhof-Schöneberg', 'Neukölln', 'Treptow-Köpenick',
+    'Marzahn-Hellersdorf', 'Lichtenberg', 'Reinickendorf'
+]
 
-# Check geometry validity
-print(districts[['name', 'geometry']].copy().assign(
-    is_valid=districts.geometry.is_valid,
-    geom_type=districts.geometry.type,
-    area_km2=districts.geometry.area / 1e6
-))
+berlin_districts = ox.features_from_place(
+    'Berlin, Germany',
+    tags={'boundary': 'administrative', 'admin_level': '9'}
+)
 
-# Check raster extent vs districts extent
-with rasterio.open('data/raw/lst_berlin.tif') as src:
-    raster_bounds = src.bounds
-    print('\nRaster bounds:', raster_bounds)
-    
-print('\nDistricts bounds:', districts.total_bounds)
+berlin_districts = berlin_districts.reset_index()
+berlin_districts = berlin_districts[['name', 'geometry']]
 
-# Check if each district overlaps with raster
-from shapely.geometry import box
-raster_box = box(raster_bounds.left, raster_bounds.bottom, 
-                 raster_bounds.right, raster_bounds.top)
+# Filter to only the 12 Bezirke
+berlin_districts = berlin_districts[berlin_districts['name'].isin(bezirke_names)]
 
-for _, row in districts.iterrows():
-    overlaps = row.geometry.intersects(raster_box)
-    print(f"{row['name']}: overlaps raster = {overlaps}")
+# Dissolve duplicates
+berlin_districts = berlin_districts.dissolve(by='name').reset_index()
+
+print(berlin_districts.shape)
+print(berlin_districts['name'].tolist())
+
+# Save
+berlin_districts.to_file('data/raw/berlin_districts.geojson', driver='GeoJSON')
+print('Saved!')

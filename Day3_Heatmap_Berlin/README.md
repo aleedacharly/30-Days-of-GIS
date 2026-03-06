@@ -10,7 +10,7 @@ Berlin's 2018 and 2022 summer heat waves caused excess mortality among elderly r
 - **Administrative Units:** 12 Bezirke (districts)
 - **Total Area:** ~892 km²
 - **Coordinate Reference System:** EPSG:25833 (UTM Zone 33N)
-
+![Berlin heat Map](outputs/ndvi_vs_lst_scatter.png)
 ---
 
 ## Data Sources

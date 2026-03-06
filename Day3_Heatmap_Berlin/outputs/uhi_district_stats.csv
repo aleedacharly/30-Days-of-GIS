@@ -1,0 +1,13 @@
+name,lst_mean,lst_min,lst_max,lst_std,ndvi_mean
+Charlottenburg-Wilmersdorf,26.28,15.0,41.34,5.96,0.302
+Friedrichshain-Kreuzberg,24.31,15.0,35.78,5.41,0.241
+Lichtenberg,30.49,15.0,47.01,6.96,0.367
+Marzahn-Hellersdorf,32.26,15.0,46.82,5.86,0.455
+Mitte,29.84,15.0,43.2,5.17,0.373
+Neukölln,24.98,15.0,39.42,5.56,0.193
+Pankow,29.27,15.0,48.71,6.56,0.427
+Reinickendorf,27.73,15.0,46.71,6.8,0.487
+Spandau,24.96,15.0,44.22,6.32,0.402
+Steglitz-Zehlendorf,23.83,15.0,35.77,5.03,0.438
+Tempelhof-Schöneberg,28.17,15.0,41.36,5.65,0.345
+Treptow-Köpenick,24.2,15.0,41.5,5.51,0.403

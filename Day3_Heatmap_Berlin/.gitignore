@@ -1,0 +1,4 @@
+*.tif
+*.geojson
+*.json
+*.pkl

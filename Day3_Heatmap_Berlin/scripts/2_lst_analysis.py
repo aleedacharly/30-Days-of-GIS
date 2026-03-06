@@ -20,8 +20,6 @@ lst_stats = zonal_stats(
     stats=['mean', 'min', 'max', 'std'],
     nodata=-9999
 )
-
-
 # Do the same for NDVI
 ndvi_stats = zonal_stats(
     districts,
@@ -46,3 +44,4 @@ districts[['name','lst_mean','lst_min','lst_max','ndvi_mean']].to_csv(
 
 
 print(districts[['name','lst_mean','ndvi_mean']].sort_values('lst_mean', ascending=False))
+

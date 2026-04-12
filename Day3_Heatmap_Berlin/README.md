@@ -1,4 +1,4 @@
-# Day 5 — Urban Heat Island Detection and Mapping in Berlin
+# Day 3 — Urban Heat Island Detection and Mapping in Berlin
 
 ## Problem Statement
 Berlin's 2018 and 2022 summer heat waves caused excess mortality among elderly residents in inner-city districts. The Berlin Senate Department for Urban Development needs a Land Surface Temperature (LST) map at district level to prioritise green-roof subsidies, street-tree planting, and cool-zone infrastructure in the hottest neighbourhoods. This project builds a reproducible, Landsat-based LST mapping workflow and aggregates surface temperatures to Berlin's 12 administrative districts (Bezirke) to provide an evidence base for climate adaptation investment.

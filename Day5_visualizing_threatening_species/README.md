@@ -5,6 +5,7 @@ threatened mammal species across Europe, built with Python and IUCN Red List
 spatial data. Each species range is rendered as a uniquely colored polygon
 outline, with full taxonomic metadata accessible via hover tooltips.
 ![Wayandu Map](output.png)
+
 ## 🗺️ How to Read the Map
 
 ### Line Density

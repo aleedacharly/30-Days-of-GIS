@@ -1,5 +1,5 @@
 # 🦡 Threatened Mammals in Europe — Interactive Species Range Map
-
+![Wayandu Map](output.png)
 An interactive geospatial visualization mapping the range distributions of
 threatened mammal species across Europe, built with Python and IUCN Red List
 spatial data. Each species range is rendered as a uniquely colored polygon
